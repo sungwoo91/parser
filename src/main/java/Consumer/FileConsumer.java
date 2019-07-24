@@ -44,6 +44,7 @@ public class FileConsumer implements Consumer {
                 words.add(word.toLowerCase());
                 consumeCounter.incrementAndGet();
 
+                // 숫자 일 때는 "number", 문자일때는 첫글자 소문자로
                 String prefix = String.valueOf(word.charAt(0) >= '0' && word.charAt(0) <= '9' ? "number" : word.charAt(0)).toLowerCase();
 
                 BufferedWriter writer = writers.computeIfAbsent(prefix, r -> {

@@ -28,6 +28,7 @@ public class FileProducer implements Producer {
             final List<String> produced = br.lines().parallel().filter(l -> pattern.matcher(l).find()).collect(Collectors.toList());
 
             for (String word : produced) {
+                // 숫자 일 때는 0번 index, 문자일때는 아스키코드 - 'a' 값에다가 파티션 사이즈 모듈러 연산한 값을 대입
                 final int index = word.charAt(0) >= '0' && word.charAt(0) <= '9' ? 0 : (String.valueOf(word.charAt(0)).toLowerCase().charAt(0) - 'a') % partitions.size();
                 partitions.get(index).put(word);
             }
