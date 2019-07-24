@@ -32,7 +32,7 @@ public class FileConsumer implements Consumer {
     }
 
     @Override
-    public void run() {
+    public void consume() {
         try {
             String word;
             while ((word = partition.poll(1000, TimeUnit.MILLISECONDS)) != null) {
@@ -66,5 +66,10 @@ public class FileConsumer implements Consumer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void run() {
+        consume();
     }
 }

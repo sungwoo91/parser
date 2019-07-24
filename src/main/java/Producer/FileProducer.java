@@ -22,7 +22,7 @@ public class FileProducer implements Producer {
     }
 
     @Override
-    public void run() {
+    public void produce() {
         try (final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFilePath)))) {
             final Pattern pattern = Pattern.compile(REGEX, Pattern.MULTILINE);
             final List<String> produced = br.lines().parallel().filter(l -> pattern.matcher(l).find()).collect(Collectors.toList());
@@ -44,5 +44,10 @@ public class FileProducer implements Producer {
             logger.error("file path : {}", inputFilePath);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void run() {
+        produce();
     }
 }
