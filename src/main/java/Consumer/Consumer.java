@@ -1,4 +1,5 @@
 package Consumer;
 
-public interface Consumer {
+public interface Consumer extends Runnable {
+
 }

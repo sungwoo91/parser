@@ -1,4 +1,5 @@
 package Producer;
 
-public interface Producer {
+public interface Producer extends Runnable {
+
 }
