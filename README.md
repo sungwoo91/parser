@@ -6,9 +6,12 @@
 4. Starter.main을 실행시킨다.
 
 # 아키텍처
+
 ![Image of Architecture](https://github.com/sungwoo91/parser/blob/master/src/main/resources/architecture/architecture.001.jpeg?raw=true)
 
 # 클래스 설계
+
+![Image of ClassDiagram](https://github.com/sungwoo91/parser/blob/master/src/main/resources/classdiagram/classdiagram.001.jpeg?raw=true)
 
 # 클래스
 > Starter
