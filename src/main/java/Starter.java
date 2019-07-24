@@ -29,7 +29,8 @@ public class Starter {
         }
 
         // producer thread
-        Executors.newSingleThreadExecutor().execute(new FileProducer(partitions, args[0]));
+        final ExecutorService producer = Executors.newSingleThreadExecutor();
+        producer.execute(new FileProducer(partitions, args[0]));
 
         final int processors = Runtime.getRuntime().availableProcessors();
         logger.debug("available processors : {}", processors);
@@ -38,8 +39,17 @@ public class Starter {
         final ExecutorService consumers = Executors.newFixedThreadPool(processors);
         partitions.forEach(partition -> consumers.execute(new FileConsumer(partition, args[1])));
 
-        consumers.shutdown();
+        shutdownThreads(producer, consumers);
+        logger.debug("consumed size : {}, duplicated size : {}", FileConsumer.consumeCounter, FileConsumer.duplicatedCounter);
+    }
 
+    private static void shutdownThreads(ExecutorService producer, ExecutorService consumers) throws InterruptedException {
+        producer.shutdown();
+        while(!producer.isTerminated()) {
+            logger.debug("terminating producer..");
+            Thread.sleep(2000);
+        }
+        consumers.shutdown();
         while(!consumers.isTerminated()) {
             logger.debug("terminating consumers..");
             Thread.sleep(2000);

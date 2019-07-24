@@ -13,10 +13,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileConsumer implements Consumer {
     private static final Logger logger = LoggerFactory.getLogger(FileConsumer.class);
 
+    public static AtomicInteger duplicatedCounter = new AtomicInteger(0);
+    public static AtomicInteger consumeCounter = new AtomicInteger(0);
+
+    private final Map<String, BufferedWriter> writers = new HashMap<>();
+    private final Set<String> words = new HashSet<>();
     private BlockingQueue<String> partition;
     private String outputDirPath;
 
@@ -28,44 +34,37 @@ public class FileConsumer implements Consumer {
     @Override
     public void run() {
         try {
-            final Map<String, BufferedWriter> writers = new HashMap<>();
-            final Set<String> duplicated = new HashSet<>();
             String word;
-            while ((word = partition.poll(3000, TimeUnit.MILLISECONDS)) != "EOF") {
-                if (word == null) {
-                    break;
-                }
-
-                if (duplicated.contains(word.toLowerCase())) {
+            while ((word = partition.poll(1000, TimeUnit.MILLISECONDS)) != null) {
+                if (words.contains(word.toLowerCase())) {
                     logger.debug("duplicated word : {} ", word);
+                    duplicatedCounter.incrementAndGet();
                     continue;
                 }
-                duplicated.add(word.toLowerCase());
+                words.add(word.toLowerCase());
+                consumeCounter.incrementAndGet();
 
                 String prefix = String.valueOf(word.charAt(0) >= '0' && word.charAt(0) <= '9' ? "number" : word.charAt(0)).toLowerCase();
+
                 BufferedWriter writer = writers.computeIfAbsent(prefix, r -> {
                     try {
                         return new BufferedWriter(new FileWriter(outputDirPath + File.separator + r + ".txt"));
                     } catch (IOException e) {
-                       throw new RuntimeException(e);
+                        logger.error("error occurred on writer path {}", outputDirPath + File.separator + r + ".txt");
+                        throw new RuntimeException(e);
                     }
                 });
 
                 writer.write(word + '\n');
             }
 
-            writers.forEach((key , value) -> {
-                try {
-                    value.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            for (BufferedWriter writer : writers.values()) {
+                writer.close();
+            }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

@@ -4,10 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,32 +23,26 @@ public class FileProducer implements Producer {
 
     @Override
     public void run() {
-
-        try {
-            final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFilePath)));
+        try (final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFilePath)))) {
             final Pattern pattern = Pattern.compile(REGEX, Pattern.MULTILINE);
+            final List<String> produced = br.lines().parallel().filter(l -> pattern.matcher(l).find()).collect(Collectors.toList());
 
-            List<String> list = br.lines().parallel().filter(l -> pattern.matcher(l).find()).collect(Collectors.toList());
-            logger.debug("produced size : " + list.size());
-
-            for (String word : list) {
-                int index = word.charAt(0) >= '0' && word.charAt(0) <= '9' ? 0 : (String.valueOf(word.charAt(0)).toLowerCase().charAt(0) - 'a') % 20;
+            for (String word : produced) {
+                final int index = word.charAt(0) >= '0' && word.charAt(0) <= '9' ? 0 : (String.valueOf(word.charAt(0)).toLowerCase().charAt(0) - 'a') % partitions.size();
                 partitions.get(index).put(word);
             }
 
-            for (BlockingQueue<String> partition : partitions) {
-                partition.put("EOF");
-            }
+            logger.debug("produced size : " + produced.size());
 
-            br.close();
-
-            logger.debug("end producer");
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("file path : {}", inputFilePath);
+            throw new RuntimeException(e);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("current thread : {}", Thread.currentThread().getName());
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            logger.error("file path : {}", inputFilePath);
+            throw new RuntimeException(e);
         }
     }
 }
