@@ -1,3 +1,9 @@
+# Description
+- Producer-Consumer 패턴을 응용하여 파일 라인을 특정 조건에 맞게 여러 파일로 분리한다.
+
+# Implementation
+- Producer 에서는 ParallelStream을 이용하여 멀티쓰레딩을 하였고, Consumer 에서는 쓰레드 풀을 이용하여 멀티쓰레딩을 구현 하였다.
+
 # 실행 순서
 1. git clone https://github.com/sungwoo91/parser.git 으로 레포지토리를 다운받는다.
 2. maven dependency 를 받아온다.
